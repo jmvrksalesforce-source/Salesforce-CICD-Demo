@@ -32,4 +32,4 @@ jobs:
       # 5. Deploy source to target org & run Apex tests
       - name: Deploy Metadata
         run: |
-          sf project deploy start --target-org TargetOrg --wait 30 --test-level RunLocalTests
+          sf project deploy start --target-org TargetOrg --wait 30 --test-level RunRelevantTests
