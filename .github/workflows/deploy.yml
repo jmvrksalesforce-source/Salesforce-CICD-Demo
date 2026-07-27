@@ -1,0 +1,35 @@
+name: Deploy to Salesforce Org
+
+on:
+  push:
+    branches:
+      - main  # Triggers when code is pushed to main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout repository code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Setup Node.js environment
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 3. Install official Salesforce CLI
+      - name: Install Salesforce CLI
+        run: npm install @salesforce/cli --global
+
+      # 4. Authorize Salesforce Org using GitHub Secret
+      - name: Authenticate Target Org
+        run: |
+          echo "${{ secrets.SFDX_AUTH_URL }}" | sf org login sfdx-url --alias TargetOrg --set-default --sfdx-url-stdin
+
+      # 5. Deploy source to target org & run Apex tests
+      - name: Deploy Metadata
+        run: |
+          sf project deploy start --target-org TargetOrg --wait 30 --test-level RunLocalTests
