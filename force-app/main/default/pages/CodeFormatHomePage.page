@@ -1,0 +1,19 @@
+<apex:page controller="OAuthCodeFormat" sidebar="false">
+    <apex:form >
+    	<apex:pageBlock title="Code Format ">
+        	<apex:pageBlockButtons location="top">
+                <apex:commandButton value="GetCode" action="{!getMyCode}" />     
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection columns="1">
+            	<apex:pageBlocksectionItem >
+                    <apex:outputLabel value="Client Id" />
+                    <apeX:inputText value="{!clientId}" />
+                </apex:pageBlocksectionItem>
+                <apex:pageBlocksectionItem >
+                    <apex:outputLabel value="Client Id" />
+                    <apeX:outputText value="{!redirectUrl}" />
+                </apex:pageBlocksectionItem>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

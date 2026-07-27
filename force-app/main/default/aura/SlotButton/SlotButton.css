@@ -1,0 +1,13 @@
+.THIS .slot{
+    background-color:rgb(92,220,92) !important;
+    color:white !important;
+    width:75px;
+    height:30px;
+}
+
+.THIS .busy{
+    background-color:rgb(220,92,92) !important;
+    color:white !important;
+    width:75px;
+    height:30px;
+}

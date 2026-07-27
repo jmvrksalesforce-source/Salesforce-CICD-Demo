@@ -1,0 +1,521 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes,force:hasRecordId" controller="PhysicianAppointment" access="global">
+    <aura:attribute name="specs" type="List" />
+    <aura:attribute name="fees" type="List" />
+    <aura:attribute name="params" type="Object" />
+    <aura:attribute name="physicians" type="Object" default="{}"/>
+    <aura:attribute name="specPhysMap" type="Object" />
+    <aura:attribute name="weekIdx" type="Integer" default="0"/>
+    <aura:attribute name="recsPerPage" type="Integer" default="5"/>
+    <aura:attribute name="slotType" type="String" default="Morning"/>
+    <aura:attribute name="scheduleMap" type="List" />
+    <aura:attribute name="currSchedule" type="List" />
+    <aura:attribute name="offSet" type="Integer" default="0" />
+    <aura:attribute name="offSetRight" type="Integer" default="0" />
+    <aura:attribute name="TotalRecs" type="Integer" default="0" />
+    <aura:attribute name="currSpec" type="String" />
+    <aura:attribute name="DispHdr" type="String" default="False"/>
+    <aura:attribute name="firstRun" type="String" default="True"/>
+    <aura:attribute name="loading" type="String" default="True"/>
+    <aura:attribute name="dayTtls" type="List" />
+    <aura:attribute name="dayMonthTtls" type="List" />
+    <aura:attribute name="itr" type="Integer" default="0"/>
+    <aura:attribute name="showModal" type="Integer" default=""/>
+    <aura:attribute name="AuthMsg" type="String" default=""/>
+    <aura:attribute name="gAuthUrl" type="String" default="about:blank"/>
+    <aura:attribute name="createGCal" type="boolean" default="true"/>
+    <aura:attribute name="srchDctr" type="String" default=""/>
+    <aura:attribute name="appDt" type="Date" />
+    
+    <aura:attribute name="DoctorName" type="String" default=""/>
+    <aura:attribute name="DrEmail" type="String" default=""/>
+    <aura:attribute name="DateMonthDay" type="String" default=""/>
+    <aura:attribute name="Time" type="String" default=""/>
+    <aura:attribute name="fee" type="String" default="0"/>
+    
+    <aura:attribute name="PatientName" type="String" default=""/>
+    <aura:attribute name="Email" type="String" default=""/>
+    <aura:attribute name="Mobile" type="String" default=""/>
+    <aura:attribute name="Subject" type="String" default="Consultation"/>
+    <aura:attribute name="Salutation" type="String" default=""/>
+    <aura:attribute name="gmailId" type="String" default=""/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
+    <aura:handler name="change" value="{!v.currSpec}" action="{!c.SpecChanged}"/>
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
+    <aura:handler name="SlotEvent1" event="c:SlotEvent" action="{!c.createEvent}" />
+    
+    <aura:if isTrue="{!v.showModal==-1}">
+        <div class="slds-box slds-theme_default">
+            <p>{!v.AuthMsg}</p>
+        </div>
+    </aura:if>
+    
+    <aura:if isTrue="{!v.showModal==0}">
+        <div class="hideForm slds-backdrop slds-backdrop_open">
+        
+        <div class="slds-box slds-theme_default">
+
+            <div class="slds-col slds-size_2-of-12">
+                <img src="{!$Resource.HospIcons + '/LongLogo.jpg'}" />
+            </div>
+            <br/>
+            <div >
+                <lightning:layout>
+                    <lightning:layoutItem class="slds-p-right--small">
+                        <lightning:select name="specialization" label="Specialization" aura:id="specialization" value="{!v.currSpec}">
+                            <aura:iteration items="{!v.specs}" var="item">
+                                <option text="{!item.label}" value="{!item.value}" selected="{!item.selected}"/>
+                            </aura:iteration>
+                        </lightning:select>
+                    </lightning:layoutItem>
+                    <lightning:layoutItem class="slds-p-right--small">
+                        <lightning:input type="date" label="Appointment Date" value="{!v.appDt}"/>
+                    </lightning:layoutItem>
+                    <lightning:layoutItem class="slds-p-right--small">
+                        <lightning:input label="Enter Doctor's Name" placeholder="Doctor Name" value="{!v.srchDctr}"/>
+                    </lightning:layoutItem>
+                    <lightning:layoutItem class="slds-p-right--small">
+                        <lightning:select label="Records Per Page" aura:id="RecsPerPage" value="{!v.recsPerPage}">
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="15">15</option>
+                            <option value="20">20</option>
+                        </lightning:select>
+                    </lightning:layoutItem>
+                    <lightning:layoutItem class="slds-p-top--large slds-p-right--small">
+                        <lightning:button variant="brand" label="Get" title="Get Schedules" onclick="{!c.getPhysicianSched}" />
+                    </lightning:layoutItem>
+                    <lightning:layoutItem class="slds-p-top--x-large">
+                        <a onclick="{!c.closeApp}">GoBack</a>
+                    </lightning:layoutItem>
+                </lightning:layout>
+            </div>
+            
+            <aura:if isTrue="{!v.fee!='0'}">
+                <div style="width: 400px;">
+                    <p class="fee ">Application Fee : <b>{!v.fee} </b></p>
+                </div>
+            </aura:if>
+            
+            <aura:if isTrue="{!v.loading!='False'}">
+                <div class="exampleHolder">
+                    <lightning:spinner alternativeText="Loading" size="large" />
+                </div>
+            </aura:if>
+            <div>
+                <aura:if isTrue="{!v.DispHdr=='True'}">
+                    <div class="slds-grid slds-wrap">
+                        <div class="slds-col slds-size_3-of-12 slds-p-right--small slds-p-left--small slds-p-top--small">
+                            <lightning:buttonGroup>
+                                <lightning:button label="Prev" disabled="{!v.offSet==0}" onclick="{!c.prevPage}" />
+                                <lightning:button label="Next" disabled="{!or(lessthan(v.TotalRecs, v.offSetRight),v.TotalRecs == v.offSetRight)}" onclick="{!c.nextPage}" />
+                                <p class="slds-p-left--small slds-p-top_x-small">( {!v.offSet * v.recsPerPage + 1} - {!v.offSetRight} of {!v.TotalRecs} )</p>
+                            </lightning:buttonGroup>
+                        </div>
+                        <aura:if isTrue="{!v.weekIdx!=0}">
+                            <div class="slds-p-right--small slds-p-top--small" onmouseover="{!c.addBckWkIcnBlink}" onmouseout="{!c.rmvBckWkIcnBlink}" onclick="{!c.prevWeek}">
+                                <lightning:icon iconName="utility:chevronleft" aura:id="prvWkIcn" alternativeText="Prev Week" />
+                            </div>
+                        </aura:if>
+                        <aura:if isTrue="{!v.weekIdx==0}">
+                            <div class="slds-p-right--small slds-p-left_x-large">
+                            </div>
+                        </aura:if>
+                        <aura:iteration items="{!v.dayTtls}" var="dt">
+                            <div class="slds-p-right--small">
+                                <div class="titleBox timing slds-box slds-box_xx-small">
+                                    <p class="day">{!dt.value}</p>
+                                    <p class="dayMonth">{!dt.key}</p>
+                                </div>
+                            </div>
+                        </aura:iteration>
+                        <div class="slds-p-right--small slds-p-top--small" onmouseover="{!c.addNxtWkIcnBlink}" onmouseout="{!c.rmvNxtWkIcnBlink}" onclick="{!c.nextWeek}">
+                            <lightning:icon iconName="utility:chevronright" aura:id="nxtWkIcn" alternativeText="Next Week" />
+                        </div>
+                        <div class="slds-col slds-size_3-of-12 slds-p-right--small slds-p-left--small">
+                            <div class="slds-p-right--small slds-p-top--small floatRight" style="float:right;">
+                                <lightning:buttonGroup>
+                                    <lightning:button label="Morning" onclick="{!c.getMorningSlots}" disabled="{!v.slotType=='Morning'}" variant="brand" />
+                                    <lightning:button label="Evening" onclick="{!c.getEveningSlots}" disabled="{!v.slotType=='Evening'}" variant="brand" />
+                                    <lightning:button label="All Day" onclick="{!c.getAllDaySlots}" disabled="{!v.slotType=='All'}" variant="brand" />
+                                </lightning:buttonGroup>
+                            </div>
+                        </div>
+                    </div>
+                </aura:if>
+                <aura:if isTrue="{!v.DispHdr!='True'}"><br/><br/><br/><br/></aura:if>
+            </div>
+            <div class="scrollable">
+                <aura:iteration items="{!v.physicians}" var="cnt">
+                    <aura:if isTrue="{!not(empty(cnt.Salutation))}">
+                        <lightning:card>
+                            <div class="slds-grid slds-wrap">
+                                <div class="slds-col slds-size_1-of-12 slds-p-right--small slds-p-left--small">
+                                    <div style="width:100px;height:100px">
+                                        <aura:if isTrue="{!or(cnt.Salutation == 'Mr.',cnt.Salutation == 'Mr')}">
+                                            <img src="{!$Resource.HospIcons + '/maleIcon.jpg'}" />
+                                        </aura:if>
+                                        <aura:if isTrue="{!or(cnt.Salutation == 'Ms.',cnt.Salutation == 'Mrs.')}">
+                                            <img src="{!$Resource.HospIcons + '/femaleIcon.jpg'}" />
+                                        </aura:if>
+                                        <aura:if isTrue="{!and(and(and(and(cnt.Salutation!='Mr.',cnt.Salutation!='Ms.'),cnt.Salutation!='Mr'),cnt.Salutation!='Mrs.'),not(empty(cnt.Salutation)))}">
+                                            <img src="{!$Resource.HospIcons + '/Icon.jpg'}" />
+                                        </aura:if>
+                                    </div>
+                                </div>
+                                <div class="slds-col slds-size_2-of-12 slds-p-right--small slds-p-left--small">
+                                    <div>
+                                        <a href="{!'/lightning/r/Contact/' + cnt.cntId + '/view' }" target="_new">
+                                            <p class="H1">{!cnt.Salutation + ' ' + cnt.Name}</p>
+                                        </a>
+                                    </div>
+                                    <div><p class="details">{!cnt.Title}</p></div>
+                                </div>
+                                <div class="slds-p-right--small slds-p-left_xx-large">
+                                    <aura:iteration items="{!v.scheduleMap}" var="sc">
+                                        <aura:if isTrue="{!sc.key==cnt.cntId}">
+                                            <aura:iteration items="{!sc.value}" var="scDayVal">
+                                                <aura:if isTrue="{!scDayVal.idx==0}">
+                                                    <!--Morning slot -->
+                                                    <aura:if isTrue="{!or(v.slotType=='Morning',v.slotType=='All')}">
+                                                        <aura:iteration items="{!scDayVal.morningSlots}" var="slot">
+                                                            <div>
+                                                                <c:SlotButton dayIndex="0" slotType="Morning" cntName="{!cnt.Name}" cntId="{!cnt.cntId}" title="{!cnt.Title}" fee="{!cnt.Fee}" salutation="{!cnt.Salutation}" slot="{!slot}" day="{!scDayVal.day}" year="{!scDayVal.year}" monthDate="{!scDayVal.monthDate}"/>
+                                                            </div>
+                                                        </aura:iteration>
+                                                    </aura:if>
+                                                    <!--Evening slot -->
+                                                    <aura:if isTrue="{!or(v.slotType=='Evening',v.slotType=='All')}">
+                                                        <aura:iteration items="{!scDayVal.eveningSlots}" var="slot">
+                                                            <div>
+                                                                <c:SlotButton dayIndex="0" slotType="Evening" cntName="{!cnt.Name}" cntId="{!cnt.cntId}" title="{!cnt.Title}" fee="{!cnt.Fee}" salutation="{!cnt.Salutation}" slot="{!slot}" day="{!scDayVal.day}" year="{!scDayVal.year}" monthDate="{!scDayVal.monthDate}"/>
+                                                            </div>
+                                                        </aura:iteration>
+                                                    </aura:if>
+                                                </aura:if>
+                                            </aura:iteration>
+                                        </aura:if>
+                                    </aura:iteration>
+                                </div>
+                                <div class="slds-p-right--small">
+                                    <aura:iteration items="{!v.scheduleMap}" var="sc">
+                                        <aura:if isTrue="{!sc.key==cnt.cntId}">
+                                            <aura:iteration items="{!sc.value}" var="scDayVal">
+                                                <aura:if isTrue="{!scDayVal.idx==1}">
+                                                    <!--Morning slot -->
+                                                    <aura:if isTrue="{!or(v.slotType=='Morning',v.slotType=='All')}">
+                                                        <aura:iteration items="{!scDayVal.morningSlots}" var="slot">
+                                                            <div>
+                                                                <c:SlotButton dayIndex="1" slotType="Morning" cntName="{!cnt.Name}" cntId="{!cnt.cntId}" title="{!cnt.Title}" fee="{!cnt.Fee}" salutation="{!cnt.Salutation}" slot="{!slot}" day="{!scDayVal.day}" year="{!scDayVal.year}" monthDate="{!scDayVal.monthDate}"/>
+                                                            </div>
+                                                        </aura:iteration>
+                                                    </aura:if>
+                                                    <!--Evening slot -->
+                                                    <aura:if isTrue="{!or(v.slotType=='Evening',v.slotType=='All')}">
+                                                        <aura:iteration items="{!scDayVal.eveningSlots}" var="slot">
+                                                            <div>
+                                                                <c:SlotButton dayIndex="1" slotType="Evening" cntName="{!cnt.Name}" cntId="{!cnt.cntId}" title="{!cnt.Title}" fee="{!cnt.Fee}" salutation="{!cnt.Salutation}" slot="{!slot}" day="{!scDayVal.day}" year="{!scDayVal.year}" monthDate="{!scDayVal.monthDate}"/>
+                                                            </div>
+                                                        </aura:iteration>
+                                                    </aura:if>
+                                                </aura:if>
+                                            </aura:iteration>
+                                        </aura:if>
+                                    </aura:iteration>
+                                </div>
+                                <div class="slds-p-right--small">
+                                    <aura:iteration items="{!v.scheduleMap}" var="sc">
+                                        <aura:if isTrue="{!sc.key==cnt.cntId}">
+                                            <aura:iteration items="{!sc.value}" var="scDayVal">
+                                                <aura:if isTrue="{!scDayVal.idx==2}">
+                                                    <!--Morning slot -->
+                                                    <aura:if isTrue="{!or(v.slotType=='Morning',v.slotType=='All')}">
+                                                        <aura:iteration items="{!scDayVal.morningSlots}" var="slot">
+                                                            <div>
+                                                                <c:SlotButton dayIndex="2" slotType="Morning" cntName="{!cnt.Name}" cntId="{!cnt.cntId}" title="{!cnt.Title}" fee="{!cnt.Fee}" salutation="{!cnt.Salutation}" slot="{!slot}" day="{!scDayVal.day}" year="{!scDayVal.year}" monthDate="{!scDayVal.monthDate}"/>
+                                                            </div>
+                                                        </aura:iteration>
+                                                    </aura:if>
+                                                    <!--Evening slot -->
+                                                    <aura:if isTrue="{!or(v.slotType=='Evening',v.slotType=='All')}">
+                                                        <aura:iteration items="{!scDayVal.eveningSlots}" var="slot">
+                                                            <div>
+                                                                <c:SlotButton dayIndex="2" slotType="Evening" cntName="{!cnt.Name}" cntId="{!cnt.cntId}" title="{!cnt.Title}" fee="{!cnt.Fee}" salutation="{!cnt.Salutation}" slot="{!slot}" day="{!scDayVal.day}" year="{!scDayVal.year}" monthDate="{!scDayVal.monthDate}"/>
+                                                            </div>
+                                                        </aura:iteration>
+                                                    </aura:if>
+                                                </aura:if>
+                                            </aura:iteration>
+                                        </aura:if>
+                                    </aura:iteration>
+                                </div>
+                                <div class="slds-p-right--small">
+                                    <aura:iteration items="{!v.scheduleMap}" var="sc">
+                                        <aura:if isTrue="{!sc.key==cnt.cntId}">
+                                            <aura:iteration items="{!sc.value}" var="scDayVal">
+                                                <aura:if isTrue="{!scDayVal.idx==3}">
+                                                    <!--Morning slot -->
+                                                    <aura:if isTrue="{!or(v.slotType=='Morning',v.slotType=='All')}">
+                                                        <aura:iteration items="{!scDayVal.morningSlots}" var="slot">
+                                                            <div>
+                                                                <c:SlotButton dayIndex="3" slotType="Morning" cntName="{!cnt.Name}" cntId="{!cnt.cntId}" title="{!cnt.Title}" fee="{!cnt.Fee}" salutation="{!cnt.Salutation}" slot="{!slot}" day="{!scDayVal.day}" year="{!scDayVal.year}" monthDate="{!scDayVal.monthDate}"/>
+                                                            </div>
+                                                        </aura:iteration>
+                                                    </aura:if>
+                                                    <!--Evening slot -->
+                                                    <aura:if isTrue="{!or(v.slotType=='Evening',v.slotType=='All')}">
+                                                        <aura:iteration items="{!scDayVal.eveningSlots}" var="slot">
+                                                            <div>
+                                                                <c:SlotButton dayIndex="3" slotType="Evening" cntName="{!cnt.Name}" cntId="{!cnt.cntId}" title="{!cnt.Title}" fee="{!cnt.Fee}" salutation="{!cnt.Salutation}" slot="{!slot}" day="{!scDayVal.day}" year="{!scDayVal.year}" monthDate="{!scDayVal.monthDate}"/>
+                                                            </div>
+                                                        </aura:iteration>
+                                                    </aura:if>
+                                                </aura:if>
+                                            </aura:iteration>
+                                        </aura:if>
+                                    </aura:iteration>
+                                </div>
+                                <div class="slds-p-right--small">
+                                    <aura:iteration items="{!v.scheduleMap}" var="sc">
+                                        <aura:if isTrue="{!sc.key==cnt.cntId}">
+                                            <aura:iteration items="{!sc.value}" var="scDayVal">
+                                                <aura:if isTrue="{!scDayVal.idx==4}">
+                                                    <!--Morning slot -->
+                                                    <aura:if isTrue="{!or(v.slotType=='Morning',v.slotType=='All')}">
+                                                        <aura:iteration items="{!scDayVal.morningSlots}" var="slot">
+                                                            <div>
+                                                                <c:SlotButton dayIndex="4" slotType="Morning" cntName="{!cnt.Name}" cntId="{!cnt.cntId}" title="{!cnt.Title}" fee="{!cnt.Fee}" salutation="{!cnt.Salutation}" slot="{!slot}" day="{!scDayVal.day}" year="{!scDayVal.year}" monthDate="{!scDayVal.monthDate}"/>
+                                                            </div>
+                                                        </aura:iteration>
+                                                    </aura:if>
+                                                    <!--Evening slot -->
+                                                    <aura:if isTrue="{!or(v.slotType=='Evening',v.slotType=='All')}">
+                                                        <aura:iteration items="{!scDayVal.eveningSlots}" var="slot">
+                                                            <div>
+                                                                <c:SlotButton dayIndex="4" slotType="Evening" cntName="{!cnt.Name}" cntId="{!cnt.cntId}" title="{!cnt.Title}" fee="{!cnt.Fee}" salutation="{!cnt.Salutation}" slot="{!slot}" day="{!scDayVal.day}" year="{!scDayVal.year}" monthDate="{!scDayVal.monthDate}"/>
+                                                            </div>
+                                                        </aura:iteration>
+                                                    </aura:if>
+                                                </aura:if>
+                                            </aura:iteration>
+                                        </aura:if>
+                                    </aura:iteration>
+                                </div>
+                                <div class="slds-p-right--small">
+                                    <aura:iteration items="{!v.scheduleMap}" var="sc">
+                                        <aura:if isTrue="{!sc.key==cnt.cntId}">
+                                            <aura:iteration items="{!sc.value}" var="scDayVal">
+                                                <aura:if isTrue="{!scDayVal.idx==5}">
+                                                    <!--Morning slot -->
+                                                    <aura:if isTrue="{!or(v.slotType=='Morning',v.slotType=='All')}">
+                                                        <aura:iteration items="{!scDayVal.morningSlots}" var="slot">
+                                                            <div>
+                                                                <c:SlotButton dayIndex="5" slotType="Morning" cntName="{!cnt.Name}" cntId="{!cnt.cntId}" title="{!cnt.Title}" fee="{!cnt.Fee}" salutation="{!cnt.Salutation}" slot="{!slot}" day="{!scDayVal.day}" year="{!scDayVal.year}" monthDate="{!scDayVal.monthDate}"/>
+                                                            </div>
+                                                        </aura:iteration>
+                                                    </aura:if>
+                                                    
+                                                    <!--Evening slot -->
+                                                    <aura:if isTrue="{!or(v.slotType=='Evening',v.slotType=='All')}">
+                                                        <aura:iteration items="{!scDayVal.eveningSlots}" var="slot">
+                                                            <div>
+                                                                <c:SlotButton dayIndex="5" slotType="Evening" cntName="{!cnt.Name}" cntId="{!cnt.cntId}" title="{!cnt.Title}" fee="{!cnt.Fee}" salutation="{!cnt.Salutation}" slot="{!slot}" day="{!scDayVal.day}" year="{!scDayVal.year}" monthDate="{!scDayVal.monthDate}"/>
+                                                            </div>
+                                                        </aura:iteration>
+                                                    </aura:if>
+                                                    
+                                                </aura:if>
+                                            </aura:iteration>
+                                        </aura:if>
+                                    </aura:iteration>
+                                </div>
+                                <div class="slds-p-right--small">
+                                    <aura:iteration items="{!v.scheduleMap}" var="sc">
+                                        <aura:if isTrue="{!sc.key==cnt.cntId}">
+                                            <aura:iteration items="{!sc.value}" var="scDayVal">
+                                                <aura:if isTrue="{!scDayVal.idx==6}">
+                                                    <!--Morning slot -->
+                                                    <aura:if isTrue="{!or(v.slotType=='Morning',v.slotType=='All')}">
+                                                        <aura:iteration items="{!scDayVal.morningSlots}" var="slot">
+                                                            <div>
+                                                                <c:SlotButton dayIndex="6" slotType="Morning" cntName="{!cnt.Name}" cntId="{!cnt.cntId}" title="{!cnt.Title}" fee="{!cnt.Fee}" salutation="{!cnt.Salutation}" slot="{!slot}" day="{!scDayVal.day}" year="{!scDayVal.year}" monthDate="{!scDayVal.monthDate}"/>
+                                                            </div>
+                                                        </aura:iteration>
+                                                    </aura:if>
+                                                    <!--Evening slot -->
+                                                    <aura:if isTrue="{!or(v.slotType=='Evening',v.slotType=='All')}">
+                                                        <aura:iteration items="{!scDayVal.eveningSlots}" var="slot">
+                                                            <div>
+                                                                <c:SlotButton dayIndex="6" slotType="Evening" cntName="{!cnt.Name}" cntId="{!cnt.cntId}" title="{!cnt.Title}" fee="{!cnt.Fee}" salutation="{!cnt.Salutation}" slot="{!slot}" day="{!scDayVal.day}" year="{!scDayVal.year}" monthDate="{!scDayVal.monthDate}"/>
+                                                            </div>
+                                                        </aura:iteration>
+                                                    </aura:if>
+                                                </aura:if>
+                                            </aura:iteration>
+                                        </aura:if>
+                                    </aura:iteration>
+                                </div>
+                            </div>
+                        </lightning:card>
+                    </aura:if>
+                </aura:iteration>
+            </div>
+        </div>
+            
+        </div>
+    </aura:if>
+    
+    <aura:if isTrue="{!v.showModal==1}">
+        <div class="hideForm slds-backdrop slds-backdrop_open"></div>
+        
+        <div class="" style="height: 640px;">
+            <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <h2 id="modal-heading-01" class="slds-modal__title slds-hyphenate">Schedule</h2>
+                        <ui:outputText value="{!v.DoctorName}"/> <br/>
+                        <ui:outputText value="{!v.DateMonthDay}"/> <br/>
+                        <ui:outputText value="{!v.Time}"/> <br/>
+                        <ui:outputText value="{!v.fee + '$'}"/> <br/>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                        <h2 id="modal-heading-01" class="slds-modal__title slds-hyphenate">Patient Info</h2>
+                        
+                        
+                        <lightning:select name="Salutations" label="Salutation" aura:id="Salutation" value="{!v.Salutation}">
+                            <option value=""></option>
+                            <option value="Mr.">Mr.</option>
+                            <option value="Ms.">Ms.</option>
+                            <option value="Mrs.">Mrs.</option>
+                        </lightning:select>
+                        <lightning:input aura:id="validateField" type="String" value="{!v.PatientName}" label="Patient's Name" placeholder="Name" required="true" />
+                        <lightning:input aura:id="validateField" type="email" value="{!v.Email}" label="Email" placeholder="emailId@example.com" required="true" />
+                        <lightning:input aura:id="validateField" type="String" value="{!v.Subject}" label="Subject" placeholder="Subject" required="true" />
+                        <lightning:input aura:id="validateField" type="String" value="{!v.Mobile}" label="Mobile" placeholder="+1234567890" />
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <lightning:button label="Schedule" onclick="{!c.getPatientInfo}" variant="brand" />
+                        <lightning:button label="Cancel" onclick="{!c.closeDialog}" variant="neutral" />
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </div>
+    </aura:if>
+    
+    <aura:if isTrue="{!v.showModal==2}">
+        <div class="hideForm slds-backdrop slds-backdrop_open"></div>
+        
+        <div class="" style="height: 640px;">
+            <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <h2 id="modal-heading-01" class="slds-modal__title slds-hyphenate">Schedule</h2>
+                        
+                        <table>
+                            <tr>
+                                <th>{!v.DoctorName}</th>
+                                <th>{!v.DateMonthDay}</th>
+                                <th>Fee</th>
+                            </tr>
+                            <tr>
+                                <td>{!v.currSpec}</td>
+                                <td>{!v.Time}</td>
+                                <td>{!v.fee + '$'}</td>
+                            </tr>
+                            
+                        </table>
+                        
+                    </header>
+                    
+                    <header class="slds-modal__header">
+                        <h2 id="modal-heading-01" class="slds-modal__title slds-hyphenate">Patient Info</h2>
+                        <h1>{!v.PatientName}</h1>
+                        <p>{!v.Email}</p>
+                        <p>{!v.Mobile}</p>
+                        <p>{!v.Subject}</p>
+                        <br/>
+                    </header>
+                    
+                    <footer class="slds-modal__footer">
+                        
+                        <lightning:button label="Confirm" onclick="{!c.submitEvent}" variant="brand" />
+                        <lightning:button label="Cancel" onclick="{!c.closeDialog}" variant="neutral" />
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </div>
+    </aura:if>
+    
+    <aura:if isTrue="{!v.showModal==3}">
+        <div class="hideForm slds-backdrop slds-backdrop_open"></div>
+        
+        <div class="" style="height: 640px;">
+            <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <h2 id="modal-heading-01" class="slds-modal__title slds-hyphenate">Google Calendar Authentication Needed</h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                        <p>Please proceed to provide Google Calender Autherization</p>
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <lightning:button label="Proceed" onclick="{!c.getAuthentication}" variant="brand" />
+                        <lightning:button label="Later" onclick="{!c.AuthenticationLater}" variant="brand" />
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </div>
+    </aura:if>
+    
+    <aura:if isTrue="{!v.showModal==4}">
+        <div class="hideForm slds-backdrop slds-backdrop_open"></div>
+        
+        <div class="" style="height: 640px;">
+            <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <h2 id="modal-heading-01" class="slds-modal__title slds-hyphenate">Unable to access Google Calendar</h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                        <p>Send request for sharing Google Calendar access</p> <br/>
+                        <p>Physist: <b>{!v.DoctorName}</b></p><br/>
+                        <p>Email  : <b>{!v.DrEmail}</b></p>
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <lightning:button label="Send Request" onclick="{!c.SendSharingRequest}" variant="brand" />
+                        <lightning:button label="Do not Send" onclick="{!c.DontSendSharingRequest}" variant="brand" />
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </div>
+    </aura:if>
+    
+    <aura:if isTrue="{!v.showModal==5}">
+        <div class="hideForm slds-backdrop slds-backdrop_open"></div>
+        
+        <div class="" style="height: 640px;">
+            <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <h2 id="modal-heading-01" class="slds-modal__title slds-hyphenate">Create Event on Salesforce!</h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                        <p>Do you want to create Event on Salesforce?</p> <br/>
+                        <p>Physist: </p><b>{!v.DoctorName}</b><br/>
+                        <p>Email  : </p><b>{!v.DrEmail}</b>
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <lightning:button label="Create Event" onclick="{!c.submitEvent2}" variant="brand" />
+                        <lightning:button label="Cancel" onclick="{!c.closeDialog}" variant="neutral" />
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </div>
+    </aura:if>
+    
+</aura:component>

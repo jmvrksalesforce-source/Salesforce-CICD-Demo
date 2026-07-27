@@ -1,0 +1,99 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes,force:hasRecordId" controller="GetWeatherInfo" access="global">
+    
+    <aura:attribute name="InitialRun" type="String" default="1"/>
+    <aura:attribute name="Area" type="String" default="Map and Weather Forecast"/>
+    
+    <aura:attribute name="CurrentTime" type="String" default=""/>
+    <aura:attribute name="CurrentIcon" type="String" default=""/>
+    <aura:attribute name="CurrentTemp" type="String" default=""/>
+    <aura:attribute name="CurrentHumidity" type="String" default=""/>
+    <aura:attribute name="CurrentWindSpeed" type="String" default=""/>
+    <aura:attribute name="CurrentWeather" type="String" default=""/>
+    
+    <aura:attribute name="ForcastTime1" type="String" default=""/>
+    <aura:attribute name="ForcastIcon1" type="String" default=""/>
+    <aura:attribute name="ForcastTemp1" type="String" default=""/>
+    <aura:attribute name="ForcastHumidity1" type="String" default=""/>
+    <aura:attribute name="ForcastWindSpeed1" type="String" default=""/>
+    <aura:attribute name="ForcastWeather1" type="String" default=""/>
+    
+    <aura:attribute name="ForcastTime2" type="String" default=""/>
+    <aura:attribute name="ForcastIcon2" type="String" default=""/>
+    <aura:attribute name="ForcastTemp2" type="String" default=""/>
+    <aura:attribute name="ForcastHumidity2" type="String" default=""/>
+    <aura:attribute name="ForcastWindSpeed2" type="String" default=""/>
+    <aura:attribute name="ForcastWeather2" type="String" default=""/>
+    
+    <aura:attribute name="ForcastTime3" type="String" default=""/>
+    <aura:attribute name="ForcastIcon3" type="String" default=""/>
+    <aura:attribute name="ForcastTemp3" type="String" default=""/>
+    <aura:attribute name="ForcastHumidity3" type="String" default=""/>
+    <aura:attribute name="ForcastWindSpeed3" type="String" default=""/>
+    <aura:attribute name="ForcastWeather3" type="String" default=""/>
+    
+    <lightning:card title="{!v.Area}">
+        <div class="slds-grid slds-wrap">
+            <div class="slds-col slds-size_1-of-2 slds-p-right--small slds-p-left--small slds-p-bottom--small">
+                <span>
+                    <iframe src="{! '/apex/AddressGoogleMap?Id=' + v.recordId }" width="100%" height="200px;" frameBorder="0"/>
+                </span>
+            </div>
+            <div class="slds-col slds-size_1-of-2 slds-p-right--small slds-p-left--small slds-p-bottom--small">
+                
+                <lightning:tabset>
+                    <lightning:tab onactive="{! c.handleCurrent }" label="Now" id="Now" aura:id="current" />
+                    <lightning:tab label=" +1h" id="1" aura:id="one">
+                        <div class="slds-grid slds-wrap">
+                            <div class="slds-col slds-size_2-of-12">
+                                <img src="{!$Resource.WeatherApiIcons + '/WeatherApiIcons/' + v.ForcastIcon1 + '.png'}" />
+                            </div>
+                            <div class="slds-col slds-size_4-of-12">
+                                <p class="temp">{!v.ForcastTemp1}</p>
+                                <p class="celcius">&#x2103;</p>
+                            </div>
+                            <div class="slds-col slds-size_6-of-12">
+                                <p class="details">{!v.ForcastHumidity1}</p>
+                                <p class="details">{!v.ForcastWindSpeed1}</p>
+                                <p class="details">{!v.ForcastWeather1}</p>
+                            </div>
+                        </div>
+                    </lightning:tab>
+                    <lightning:tab label="+2h" id="2" aura:id="two">
+                        <div class="slds-grid slds-wrap">
+                            <div class="slds-col slds-size_2-of-12">
+                                <img src="{!$Resource.WeatherApiIcons + '/WeatherApiIcons/' + v.ForcastIcon2 + '.png'}" />
+                            </div>
+                            <div class="slds-col slds-size_4-of-12">
+                                <p class="temp">{!v.ForcastTemp2}</p>
+                                <p class="celcius">&#x2103;</p>
+                            </div>
+                            <div class="slds-col slds-size_6-of-12">
+                                <p class="details">{!v.ForcastHumidity2}</p>
+                                <p class="details">{!v.ForcastWindSpeed2}</p>
+                                <p class="details">{!v.ForcastWeather2}</p>
+                            </div>
+                        </div>
+                    </lightning:tab>
+                    <lightning:tab label="+3h" id="3" aura:id="three">
+                        <div class="slds-grid slds-wrap">
+                            <div class="slds-col slds-size_2-of-12">
+                                <img src="{!$Resource.WeatherApiIcons + '/WeatherApiIcons/' + v.ForcastIcon3 + '.png'}" />
+                            </div>
+                            <div class="slds-col slds-size_4-of-12">
+                                <p class="temp">{!v.ForcastTemp3}</p>
+                                <p class="celcius">&#x2103;</p>
+                                <span></span><br/>
+                            </div>
+                            <div class="slds-col slds-size_6-of-12">
+                                <p class="details">{!v.ForcastHumidity3}</p>
+                                <p class="details">{!v.ForcastWindSpeed3}</p>
+                                <p class="details">{!v.ForcastWeather3}</p>
+                            </div>
+                        </div>
+                    </lightning:tab>
+                </lightning:tabset>                
+                
+            </div>
+        </div>
+    </lightning:card>
+</aura:component>

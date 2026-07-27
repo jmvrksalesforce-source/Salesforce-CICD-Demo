@@ -1,0 +1,5 @@
+<apex:page controller="GoogleAutherization" action="{!load}" sidebar="false" >
+    <apex:form >
+        <p>{!message}</p>
+    </apex:form>
+</apex:page>

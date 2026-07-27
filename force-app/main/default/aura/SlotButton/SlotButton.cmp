@@ -1,0 +1,24 @@
+<aura:component >
+    <aura:attribute name="value" type="String"/>
+    <aura:attribute name="cntName" type="String" default="" />
+    <aura:attribute name="salutation" type="String"/>
+    <aura:attribute name="cntId" type="String"/>
+    <aura:attribute name="title" type="String"/>
+    <aura:attribute name="fee" type="String"/>
+    <aura:attribute name="slot" type="String"/>
+    <aura:attribute name="dayIndex" type="String"/>
+    <aura:attribute name="slotType" type="String"/>
+    <aura:attribute name="day" type="String"/>
+    <aura:attribute name="monthDate" type="String"/>
+    <aura:attribute name="year" type="String"/>
+    
+    <aura:attribute name="label" type="String"/>
+    
+    <aura:registerEvent name="SlotEvent1" type="c:SlotEvent" />
+    
+    <lightning:button label="{!v.slot}" 
+                      disabled="{!v.slot=='Busy'}" 
+                      onclick="{!c.fireEvent}" 
+                      class="{!v.slot=='Busy'?'busy':'slot'}" 
+                      value="{!v.value}" />
+</aura:component>

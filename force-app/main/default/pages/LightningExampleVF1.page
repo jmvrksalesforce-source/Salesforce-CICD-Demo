@@ -1,0 +1,16 @@
+<apex:page showHeader="false" sidebar="false">
+    <apex:includeLightning />    
+    <apex:includeScript value="/lightning/lightning.out.js" />
+    <div id="LightningComponentid" />    
+    <script>
+    $Lightning.use("c:LightExampleApp1", function() {
+        $Lightning.createComponent("c:PhysicianAppointment",
+          { 
+          },
+          "LightningComponentid",
+          function(cmp) {
+             console.log('Display Lightning component in visualforce page');
+          });
+    });
+    </script>
+</apex:page>

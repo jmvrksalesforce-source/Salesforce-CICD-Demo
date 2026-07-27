@@ -1,0 +1,83 @@
+.THIS .H1 {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 18px;
+}
+
+.THIS .details {
+    font-size:17px;
+    font-Style:italic;
+    color:#878787
+}
+
+.THIS .custom-box {
+    text-align: center;
+    background-color: #f4f6f9;
+    padding: 1rem;
+    border: 1px solid #d8dde6;
+}
+
+.THIS .timing{
+    width:75px;
+    text-align: center;
+}
+
+.THIS .center{
+    text-align: center;
+}
+
+.THIS .scrollable {
+    height: 550px;
+    overflow-y:auto;
+}
+
+.THIS .scrollableDefault {
+    height: 550px;
+    overflow-y:auto;
+}
+
+.THIS .fee {
+    font-size: 12px;
+    color:green;
+}
+
+.THIS .day {
+    font-size: 13px;
+    color:white;
+}
+
+.THIS .dayMonth {
+    font-size: 13px;
+    color:white;
+}
+
+.THIS .titleBox {
+    /*background-color:rgb(163, 73, 164);*/
+    background-color:rgb(0, 70, 110);
+}
+
+.THIS .blink{
+    background-color:rgb(220,220,220) !important;
+    transition: 0.5s;
+}
+
+.THIS .slot{
+    background-color:rgb(92,220,92) !important;
+    color:white !important;
+    width:75px;
+    height:30px;
+}
+
+.THIS .busy{
+    background-color:rgb(220,92,92) !important;
+    color:white !important;
+    width:75px;
+    height:30px;
+}
+
+.THIS .floatRight{
+    float:right;
+}
+
+.THIS .hideForm{
+    display:none;
+}

@@ -1,0 +1,13 @@
+<aura:event type="Component" description="">
+    <aura:attribute name="cntName" type="String"/>
+    <aura:attribute name="salutation" type="String"/>
+    <aura:attribute name="cntId" type="String"/>
+    <aura:attribute name="title" type="String"/>
+    <aura:attribute name="fee" type="String"/>
+    <aura:attribute name="slot" type="String"/>
+    <aura:attribute name="dayIndex" type="String"/>
+    <aura:attribute name="slotType" type="String"/>
+    <aura:attribute name="day" type="String"/>
+    <aura:attribute name="monthDate" type="String"/>
+    <aura:attribute name="year" type="String"/>
+</aura:event>

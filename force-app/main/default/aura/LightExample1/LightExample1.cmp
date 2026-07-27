@@ -1,0 +1,5 @@
+<aura:component>
+    <div>
+        <h1> This is lightning component for visualforce page</h1>
+    </div>
+</aura:component>

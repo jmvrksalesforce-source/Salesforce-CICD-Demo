@@ -1,0 +1,23 @@
+<aura:component >
+    <aura:attribute name="CurrentIcon" type="String" default="111"/>
+    <aura:attribute name="CurrentTemp" type="String" default="222"/>
+    <aura:attribute name="CurrentHumidity" type="String" default="333"/>
+    <aura:attribute name="CurrentWindSpeed" type="String" default="444"/>
+    <aura:attribute name="CurrentWeather" type="String" default="555"/>
+    
+    <div class="slds-grid slds-wrap">
+        <div class="slds-col slds-size_2-of-12">
+            <img src="{!$Resource.WeatherApiIcons + '/WeatherApiIcons/' + v.CurrentIcon + '.png'}" />
+        </div>
+        <div class="slds-col slds-size_4-of-12">
+                    <p class="temp">{!v.CurrentTemp}</p>
+                    <p class='celcius'>&#x2103;</p>
+        </div>
+        <div class="slds-col slds-size_6-of-12">
+            <p class="details">{!v.CurrentHumidity}</p>
+            <p class="details">{!v.CurrentWindSpeed}</p>
+            <p class="details">{!v.CurrentWeather}</p>
+        </div>
+    </div>
+    
+</aura:component>

@@ -1,0 +1,10 @@
+<apex:page >
+    <apex:includeLightning />
+ 
+    <div id="lightning" />
+
+    <script>
+        $Lightning.use("c:PhysicianAppointment", function() {
+        });
+    </script>
+</apex:page>
