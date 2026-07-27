@@ -1,3 +1,3 @@
 public class UpdateAccountLastContactDate {
-    public boolean check1=true;
+    public static boolean check1=true;
 }
