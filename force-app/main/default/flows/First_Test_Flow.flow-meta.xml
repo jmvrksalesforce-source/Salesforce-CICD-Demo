@@ -63,7 +63,7 @@
         <fields>
             <name>Initial_Message</name>
             <defaultValue>
-                <stringValue>Initial Message 222</stringValue>
+                <stringValue>Initial Message</stringValue>
             </defaultValue>
             <fieldText>Initial Message</fieldText>
             <fieldType>LargeTextArea</fieldType>
